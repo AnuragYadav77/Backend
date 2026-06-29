@@ -1,8 +1,11 @@
 import {asyncHandler} from "../utils/async-handler.js"
+
 import {ApiError} from "../utils/ApiError.js"
 
 import {User} from "../models/user.model.js"
+
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
+
 import { ApiResponse } from "../utils/ApiResponse.js"
 
 const registerUser = asyncHandler(async(req,res)=>{
@@ -28,7 +31,7 @@ const registerUser = asyncHandler(async(req,res)=>{
     }
 
     //3
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or : [{username},{email}]
     })
     if(existedUser){
