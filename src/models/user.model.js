@@ -52,23 +52,29 @@ const userSchema = new Schema({
     timestamps:true 
 })
 
+
 //Pre hook (middleware)
-userSchema.pre("save",async function(next){
-    if(!this.isModified("password")) return next();
-    this.password= await bcrypt.hash(this.password,10) //encryption
-    next()
-})
+userSchema.pre("save", async function() {
+
+    //only hash password if it is modified
+    if(!this.isModified("password")) return;
+
+    this.password = await bcrypt.hash(this.password, 10);
+
+});
+
 
 userSchema.methods.isPasswordCorrect = async function(password){
    return await bcrypt.compare(password,this.password)
 }
+
 
 userSchema.methods.generateAccessToken=function(){
     return jwt.sign({
         _id:this._id,
         email:this.email,
         username:this.username,
-        fullName:this.fullname
+        fullName:this.fullName //fixed typo
     },
     process.env.ACESS_TOKEN_SECRET,
     {
@@ -76,6 +82,8 @@ userSchema.methods.generateAccessToken=function(){
     }
 )
 }
+
+
 userSchema.methods.generateRefreshToken=function(){
     return jwt.sign({
         _id:this._id,
@@ -87,5 +95,6 @@ userSchema.methods.generateRefreshToken=function(){
     }
 )
 }
+
 
 export const User = mongoose.model("User",userSchema)
