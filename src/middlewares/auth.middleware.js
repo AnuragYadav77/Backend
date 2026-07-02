@@ -1,10 +1,10 @@
-import { User } from "../models/user.model";
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/async-handler";
+import { User } from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 import jwt from "jsonwebtoken"
   
-import {User} from "../models/user.model"
+
 
 //this middleware will verify that the user id present are not
 export const verifyJWT = asyncHandler(async(req, _,next)=>{
@@ -17,7 +17,7 @@ export const verifyJWT = asyncHandler(async(req, _,next)=>{
    }
  
    //verifying using jwt whether the token is correct or not
-  const decodedToken = jwt.verify(token,process.env.ACESS_TOKEN_SECRET)
+  const decodedToken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
  
   const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
  
