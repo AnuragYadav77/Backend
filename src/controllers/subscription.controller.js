@@ -120,6 +120,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     .json(
         new ApiResponse(200,subcribers,"Subscribers fetched successfully")
     )
+    
 })
 
 // controller to return channel list to which user has subscribed
