@@ -256,6 +256,20 @@ It provides a high-level overview of the application's data model and how differ
 - Channel Videos
 
 ---
+## 🧪 API Testing
+
+A Postman collection has been created for testing the API endpoints.
+
+Current Status:
+- ✅ User APIs tested
+- 🚧 Video APIs in progress
+- 🚧 Playlist APIs in progress
+- 🚧 Subscription APIs in progress
+- 🚧 Tweet APIs in progress
+- 🚧 Like APIs in progress
+- 🚧 Dashboard APIs in progress
+
+The collection will be updated as new endpoints are tested.
 
 # ☁️ File Uploads
 
