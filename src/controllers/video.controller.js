@@ -284,11 +284,86 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 })
 
+//update video details like title, description, thumbnail
 const updateVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    //TODO: update video details like title, description, thumbnail
+    const { videoId } = req.params;
+    const { title, description } = req.body;
+    
+    // 1. Prepare update object dynamically (Optional fields)
+    const updateData = {};
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
 
-})
+    // 2. Handle Thumbnail Upload (Optional)
+    let thumbnailToDelete = null;
+    if (req.file?.path) {
+        // Fetch video ONLY if we need the old thumbnail ID
+        const video = await Video.findById(videoId);
+        if (!video) throw new ApiError(404, "No video found");
+        
+        // Check Ownership
+        if (video.owner.toString() !== req.user._id.toString()) {
+            throw new ApiError(403, "Only owner can edit");
+        }
+
+        thumbnailToDelete = video.thumbnail.public_id;
+        
+        const thumbnail = await uploadOnCloudinary(req.file.path);
+        if (!thumbnail) throw new ApiError(500, "Upload failed");
+
+        updateData.thumbnail = {
+            public_id: thumbnail.public_id,
+            url: thumbnail.url
+        };
+    } else {
+        // If no file, we still need to check ownership if updating text
+        if (Object.keys(updateData).length > 0) {
+             const video = await Video.findById(videoId);
+             if (!video) throw new ApiError(404, "No video found");
+             if (video.owner.toString() !== req.user._id.toString()) {
+                throw new ApiError(403, "Only owner can edit");
+             }
+        }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+        throw new ApiError(400, "No data provided to update");
+    }
+
+    // 3. Single Atomic Update (Combines Find, Check Owner, and Update)
+    // If you didn't fetch video earlier for thumbnail, you must include owner in filter
+    // Note: Since we checked ownership above for thumbnail logic, we can skip re-checking 
+    // if we trust the flow, but for pure atomic safety without prior fetch:
+    
+    /* 
+       PURE ATOMIC APPROACH (Requires knowing owner ID beforehand or trusting the prior fetch):
+       If we fetched 'video' above, we already validated ownership. 
+       We can just update by ID. 
+    */
+    
+    const updatedVideo = await Video.findByIdAndUpdate(
+        videoId, 
+        { $set: updateData }, 
+        { new: true }
+    );
+
+    if (!updatedVideo) {
+        throw new ApiError(500, "Update failed");
+    }
+
+    // 4. Delete Old Image (Non-blocking / Fire-and-forget)
+    if (thumbnailToDelete) {
+        // Do not await here to speed up response. 
+        // Handle errors internally in delete function if needed.
+        deleteOnCloudinary(thumbnailToDelete).catch(err => 
+            console.error("Failed to delete old thumbnail:", err)
+        );
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, updatedVideo, "Video updated successfully")
+    );
+});   
 
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
