@@ -6,6 +6,7 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {uploadOnCloudinary,deleteOnCLoudinary} from "../utils/cloudinary.js"
 import {comment} from "../models/comment.model.js"
+import { PREPAGINATION_PLACEHOLDER } from "mongoose-aggregate-paginate-v2"
 
 
 
@@ -365,9 +366,51 @@ const updateVideo = asyncHandler(async (req, res) => {
     );
 });   
 
+//delete video
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    //TODO: delete video
+
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400,"Invalid videoId");
+    }
+
+    const video = await Video.findById(videoId)
+
+    if(!video){
+        throw new ApiError(404,"Video not found");
+    }
+
+    if(video?.owner.toString()!== req.user?._id.toString()){
+        throw new ApiError(400,"Only owner can delete the video");
+    }
+
+    const videoToDelete = await Video.findByIdAndDelete(video?._id);
+
+    if(!videoToDelete){
+        throw new ApiError(500,"Failed to delete the video, please try again!")
+    }
+
+    await deleteOnCLoudinary(video.thumbnail.public_id);
+    await deleteOnCLoudinary(video.videoFile.public_id);
+
+    //delete video likes
+
+    await Like.deleteMany({
+        video:videoId
+    })
+
+    //delete video comments
+
+    await comment.deleteMany(
+        {
+            video:videoId
+        }
+    )
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{},"Video deleted!")
+    )
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
