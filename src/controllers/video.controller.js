@@ -5,7 +5,7 @@ import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {uploadOnCloudinary,deleteOnCLoudinary} from "../utils/cloudinary.js"
-import {comment} from "../models/comment.model.js"
+import {Comment} from "../models/comment.model.js"
 import { PREPAGINATION_PLACEHOLDER } from "mongoose-aggregate-paginate-v2"
 
 
